@@ -1,0 +1,26 @@
+{
+  "name": "@hexlet/code",
+  "version": "0.0.1",
+  "type": "module",
+  "description": "PageLoader is a command line utility that downloads pages from the Internet",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/denikeev/backend-project-4.git"
+  },
+  "author": "denikeev",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/denikeev/backend-project-4/issues"
+  },
+  "homepage": "https://github.com/denikeev/backend-project-4#readme",
+  "devDependencies": {
+    "eslint": "^8.30.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.26.0",
+    "jest": "^29.3.1"
+  }
+}
