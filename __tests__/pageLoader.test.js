@@ -11,11 +11,13 @@ const __dirname = path.dirname(__filename);
 const getFixturePath = (file) => path.join(__dirname, '..', '__fixtures__', file);
 
 let expected;
+let before;
 let destPath;
 const url = new URL('https://ru.hexlet.io/courses');
 
 beforeAll(async () => {
-  expected = await fs.readFile(getFixturePath('index.html'), 'utf-8');
+  before = await fs.readFile(getFixturePath('before.html'), 'utf-8');
+  expected = await fs.readFile(getFixturePath('after.html'), 'utf-8');
 });
 
 beforeEach(async () => {
@@ -25,7 +27,7 @@ beforeEach(async () => {
 test('pageLoader', async () => {
   nock(url.origin)
     .get(url.pathname)
-    .reply(200, expected);
+    .reply(200, before);
   const filename = await pageLoader(url, destPath);
   const actual = await fs.readFile(path.join(destPath, filename), 'utf-8');
   expect(actual).toBe(expected);
