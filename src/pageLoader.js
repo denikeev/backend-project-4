@@ -1,8 +1,8 @@
 import axios from 'axios';
 import cheerio from 'cheerio';
+import prettier from 'prettier';
 import fs from 'fs/promises';
 import path from 'path';
-import prettier from 'prettier';
 
 const getUrlParts = (address) => {
   const url = new URL(address);
@@ -52,8 +52,7 @@ const pageLoader = (url, dirpath = process.cwd()) => {
         printWidth: Infinity,
       });
     })
-    .then((prettifiedData) => fs.writeFile(outputPath, prettifiedData))
-    .then(() => filename);
+    .then((prettifiedData) => fs.writeFile(outputPath, prettifiedData));
 };
 
 export default pageLoader;
