@@ -14,6 +14,7 @@ let expectedHtml;
 let expectedImg;
 let destPath;
 const url = new URL('https://ru.hexlet.io/courses');
+const imageUrl = new URL('https://ru.hexlet.io/assets/professions/nodejs.png');
 const htmlFilename = 'ru-hexlet-io-courses.html';
 const imgFilename = 'ru-hexlet-io-assets-professions-nodejs.png';
 const dirname = 'ru-hexlet-io-courses_files';
@@ -25,6 +26,9 @@ beforeAll(async () => {
   nock(url.origin)
     .get(url.pathname)
     .reply(200, before);
+  nock(imageUrl.origin)
+    .get(imageUrl.pathname)
+    .reply(200, expectedImg);
   destPath = await fs.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
   await pageLoader(url, destPath);
 });
@@ -41,5 +45,5 @@ test('pageLoader files dir', async () => {
 
 test('pageLoader img', async () => {
   const actual = await fs.readFile(path.join(destPath, dirname, imgFilename));
-  expect(actual).toBe(expectedImg);
+  expect(actual).toEqual(expectedImg);
 });

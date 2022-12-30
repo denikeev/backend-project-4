@@ -15,6 +15,11 @@ make link
 ## Demos:
 <details><summary>step 1</summary>
 
-[![step 3](https://asciinema.org/a/nlkLYigL1LpmzzikpoJrY28Ge.svg)](https://asciinema.org/a/nlkLYigL1LpmzzikpoJrY28Ge)  
+[![step 1](https://asciinema.org/a/nlkLYigL1LpmzzikpoJrY28Ge.svg)](https://asciinema.org/a/nlkLYigL1LpmzzikpoJrY28Ge)  
+
+</details>
+<details><summary>step 2</summary>
+
+[![step 2](https://asciinema.org/a/cGLG44xzPARuve1cfesSAmkEg.svg)](https://asciinema.org/a/cGLG44xzPARuve1cfesSAmkEg)   
 
 </details>
