@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
-import pageLoader from '../src/pageLoader.js';
+import loadPage from '../src/loadPage.js';
 
 const program = new Command();
 
@@ -12,6 +12,6 @@ program
   .version('0.0.1')
   .option('-o, --output [dir]', 'output dir', currentDir)
   .argument('<url>')
-  .action((url) => pageLoader(url, `${program.opts().output}`));
+  .action((url) => loadPage(url, `${program.opts().output}`));
 
 program.parse();
