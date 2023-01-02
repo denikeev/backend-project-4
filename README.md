@@ -28,3 +28,8 @@ make link
 [![step 3](https://asciinema.org/a/yoZtkkrMH2aY0kiKgtWlrrWk0.svg)](https://asciinema.org/a/yoZtkkrMH2aY0kiKgtWlrrWk0)   
 
 </details>
+<details><summary>step 4</summary>
+
+[![step 4](https://asciinema.org/a/ojOXrZOHJLzol0Z9Cq4A4RK7N.svg)](https://asciinema.org/a/ojOXrZOHJLzol0Z9Cq4A4RK7N)   
+
+</details>

@@ -1,11 +1,15 @@
+import 'axios-debug-log';
 import axios from 'axios';
 import prettier from 'prettier';
+import debug from 'debug';
 
 import fs from 'fs/promises';
 import path from 'path';
 
 import parseHtml from './parseHtml.js';
 import getFileName from './getFileName.js';
+
+const log = debug('page-loader');
 
 const getSources = (resources) => {
   const keys = Object.keys(resources);
@@ -19,7 +23,10 @@ const getSources = (resources) => {
   return { requests, newFilepaths };
 };
 
-const loadPage = (address, dirpath = process.cwd()) => {
+export default (address, dirpath = process.cwd()) => {
+  log(`URL ${address}`);
+  log(`Output dir ${dirpath}`);
+
   const url = new URL(address);
   const { hostname, pathname } = url;
   const mainPath = path.join(hostname, pathname);
@@ -43,6 +50,7 @@ const loadPage = (address, dirpath = process.cwd()) => {
       });
       fs.writeFile(htmlPath, prettifiedHtml);
       if (requests.length > 0) {
+        log(`has requests, requests length: ${requests.length}`);
         fs.mkdir(path.join(dirpath, directoryPath));
         newSourses = newFilepaths;
       }
@@ -53,7 +61,8 @@ const loadPage = (address, dirpath = process.cwd()) => {
         const filepath = path.join(dirpath, directoryPath, newSourses[i]);
         fs.writeFile(filepath, response.data);
       });
+    })
+    .then(() => {
+      log('page loaded');
     });
 };
-
-export default loadPage;

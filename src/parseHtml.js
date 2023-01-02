@@ -2,9 +2,8 @@ import path from 'path';
 import cheerio from 'cheerio';
 import getFileName from './getFileName.js';
 
-const parseHtml = (html, address, directoryPath) => {
+const parseHtml = (html, url, directoryPath) => {
   const $ = cheerio.load(html);
-  const url = new URL(address);
   const { hostname, origin } = url;
 
   const getUrls = (sourseType, resource) => (_, el) => {
