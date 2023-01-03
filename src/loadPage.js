@@ -11,6 +11,26 @@ import getFileName from './getFileName.js';
 
 const log = debug('page-loader');
 
+const handleErrors = (err) => {
+  const getError = (message = 'Unknown Error') => new Error(message, { cause: err });
+  const errors = ['ERR_INVALID_URL', 'ENOENT', 'EACCES'];
+  let message = '';
+
+  if (err.response) {
+    if (err.response.status === 404) {
+      message = `Page '${err.config.url.href}' not found [404]`;
+    }
+    if (err.response.status === 500) {
+      message = `Internal server error on page ${err.config.url.href} [500]`;
+    }
+  }
+  if (errors.includes(err.code)) {
+    message = err.message;
+  }
+
+  throw getError(message);
+};
+
 const getSources = (resources) => {
   const keys = Object.keys(resources);
   const requests = keys
@@ -27,42 +47,49 @@ export default (address, dirpath = process.cwd()) => {
   log(`URL ${address}`);
   log(`Output dir ${dirpath}`);
 
-  const url = new URL(address);
+  let url;
+  try {
+    url = new URL(address);
+  } catch (err) {
+    handleErrors(err);
+  }
   const { hostname, pathname } = url;
   const mainPath = path.join(hostname, pathname);
   const htmlFilename = getFileName(mainPath, '.html');
-  const directoryPath = getFileName(mainPath, '_files');
+  const filesPath = getFileName(mainPath, '_files');
   const htmlPath = path.join(dirpath, htmlFilename);
   let newSourses;
+  let promises;
 
   return axios.get(url)
     .then((response) => {
       const { html, resources } = parseHtml(
         response.data,
         url,
-        directoryPath,
+        filesPath,
       );
       const { requests, newFilepaths } = getSources(resources);
-      const promises = Promise.all(requests);
       const prettifiedHtml = prettier.format(html, {
         parser: 'html',
         printWidth: Infinity,
       });
-      fs.writeFile(htmlPath, prettifiedHtml);
+      const htmlPromise = fs.writeFile(htmlPath, prettifiedHtml);
+      promises = Promise.all([htmlPromise, ...requests]);
       if (requests.length > 0) {
         log(`has requests, requests length: ${requests.length}`);
-        fs.mkdir(path.join(dirpath, directoryPath));
         newSourses = newFilepaths;
+        return fs.mkdir(path.join(dirpath, filesPath));
       }
-      return promises;
+      return Promise.resolve();
     })
+    .then(() => promises)
     .then((responses) => {
-      responses.forEach((response, i) => {
-        const filepath = path.join(dirpath, directoryPath, newSourses[i]);
+      const [, ...restResponses] = responses;
+      restResponses.forEach((response, i) => {
+        const filepath = path.join(dirpath, filesPath, newSourses[i]);
         fs.writeFile(filepath, response.data);
       });
-    })
-    .then(() => {
       log('page loaded');
-    });
+    })
+    .catch(handleErrors);
 };

@@ -43,32 +43,87 @@ beforeAll(async () => {
   await loadPage(url, destPath);
 });
 
-test('loadPage html', async () => {
-  const actual = await fs.readFile(path.join(destPath, htmlFilename), 'utf-8');
-  expect(actual.trim()).toBe(expectedHtml);
+describe('main flow', () => {
+  test('loadPage html', async () => {
+    const actual = await fs.readFile(path.join(destPath, htmlFilename), 'utf-8');
+    expect(actual.trim()).toBe(expectedHtml);
+  });
+
+  test('loadPage files dir', async () => {
+    const actual = await fs.access(path.join(destPath, dirname));
+    expect(actual).toBeUndefined();
+  });
+
+  test('loadPage img', async () => {
+    const actual = await fs.readFile(path.join(destPath, dirname, imgFilename));
+    expect(actual).toEqual(expectedImg);
+  });
+
+  test('loadPage link', async () => {
+    const actual = await fs.readFile(path.join(destPath, dirname, styleFilename), 'utf-8');
+    expect(actual).toBe(expectedStyle);
+  });
+
+  test('loadPage canonical', async () => {
+    const actual = await fs.readFile(path.join(destPath, dirname, canonicalFilename), 'utf-8');
+    expect(actual).toBe(beforeHtml);
+  });
+
+  test('loadPage script', async () => {
+    const actual = await fs.readFile(path.join(destPath, dirname, jsFilename), 'utf-8');
+    expect(actual).toBe(expectedScript);
+  });
 });
 
-test('loadPage files dir', async () => {
-  const actual = await fs.access(path.join(destPath, dirname));
-  expect(actual).toBeUndefined();
-});
+describe('throws', () => {
+  test('invalid url', async () => {
+    expect.assertions(1);
+    try {
+      await loadPage('example.com');
+    } catch ({ cause }) {
+      expect(cause.code).toEqual('ERR_INVALID_URL');
+    }
+  });
 
-test('loadPage img', async () => {
-  const actual = await fs.readFile(path.join(destPath, dirname, imgFilename));
-  expect(actual).toEqual(expectedImg);
-});
+  test('http 404', async () => {
+    expect.assertions(1);
+    try {
+      const destPath1 = await fs.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
+      nock('https://example.com').get('/notfoundpage').reply(404);
+      await loadPage('https://example.com/notfoundpage', destPath1);
+    } catch ({ cause }) {
+      expect(cause.code).toEqual('ERR_BAD_REQUEST');
+    }
+  });
 
-test('loadPage link', async () => {
-  const actual = await fs.readFile(path.join(destPath, dirname, styleFilename), 'utf-8');
-  expect(actual).toBe(expectedStyle);
-});
+  test('http 500', async () => {
+    expect.assertions(1);
+    try {
+      const destPath1 = await fs.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
+      nock('https://example.com').get('/internalservererr').reply(500);
+      await loadPage('https://example.com/internalservererr', destPath1);
+    } catch ({ cause }) {
+      expect(cause.code).toEqual('ERR_BAD_RESPONSE');
+    }
+  });
 
-test('loadPage canonical', async () => {
-  const actual = await fs.readFile(path.join(destPath, dirname, canonicalFilename), 'utf-8');
-  expect(actual).toBe(beforeHtml);
-});
+  test('no such file or directory', async () => {
+    expect.assertions(1);
+    try {
+      nock('https://example.com').get('/').reply(200, '<html></html>');
+      await loadPage('https://example.com', '/unknown');
+    } catch ({ cause }) {
+      expect(cause.code).toEqual('ENOENT');
+    }
+  });
 
-test('loadPage script', async () => {
-  const actual = await fs.readFile(path.join(destPath, dirname, jsFilename), 'utf-8');
-  expect(actual).toBe(expectedScript);
+  test('permission denied', async () => {
+    expect.assertions(1);
+    try {
+      nock('https://example.com').get('/').reply(200, '<html></html>');
+      await loadPage('https://example.com', '/etc');
+    } catch ({ cause }) {
+      expect(cause.code).toEqual('EACCES');
+    }
+  });
 });

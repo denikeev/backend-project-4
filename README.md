@@ -33,3 +33,8 @@ make link
 [![step 4](https://asciinema.org/a/ojOXrZOHJLzol0Z9Cq4A4RK7N.svg)](https://asciinema.org/a/ojOXrZOHJLzol0Z9Cq4A4RK7N)   
 
 </details>
+<details><summary>step 5</summary>
+
+[![step 5](https://asciinema.org/a/pIviNgLzBpT6IvhtbHAlUS7Gm.svg)](https://asciinema.org/a/pIviNgLzBpT6IvhtbHAlUS7Gm)   
+
+</details>

@@ -14,4 +14,8 @@ program
   .argument('<url>')
   .action((url) => loadPage(url, `${program.opts().output}`));
 
-program.parse();
+program.parseAsync()
+  .catch((err) => {
+    console.error(err.message);
+    process.exit(1);
+  });
