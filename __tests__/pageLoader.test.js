@@ -72,3 +72,45 @@ test('loadPage script', async () => {
   const actual = await fs.readFile(path.join(destPath, dirname, jsFilename), 'utf-8');
   expect(actual).toBe(expectedScript);
 });
+
+describe('throws', () => {
+  test('invalid url', async () => {
+    expect.assertions(1);
+    try {
+      const destPath1 = await fs.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
+      await loadPage('example.com', destPath1);
+    } catch ({ cause }) {
+      expect(cause.code).toEqual('ERR_INVALID_URL');
+    }
+  });
+
+  test('http 404', async () => {
+    expect.assertions(1);
+    try {
+      const destPath1 = await fs.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
+      nock('https://example.com').get('/notfoundpage').reply(404, { status: 404 });
+      await loadPage('https://example.com/notfoundpage', destPath1);
+    } catch ({ cause }) {
+      expect(cause.code).toEqual(404);
+    }
+  });
+  test('http 500', async () => {
+    expect.assertions(1);
+    try {
+      const destPath1 = await fs.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
+      nock('https://example.com').get('/internalservererr').reply(500, { status: 500 });
+      await loadPage('https://example.com/internalservererr', destPath1);
+    } catch ({ cause }) {
+      expect(cause.code).toEqual(500);
+    }
+  });
+  test('no such file or directory', async () => {
+    expect.assertions(1);
+    try {
+      nock('https://example.com').get('/').reply(200, expectedHtml);
+      await loadPage('https://example.com', '/unknown');
+    } catch (err) {
+      expect(err.message).toEqual("ENOENT: no such file or directory, mkdir '/unknown/example_files'");
+    }
+  });
+});

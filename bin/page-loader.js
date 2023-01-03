@@ -14,4 +14,10 @@ program
   .argument('<url>')
   .action((url) => loadPage(url, `${program.opts().output}`));
 
-program.parse();
+program.parseAsync()
+  .catch((err) => {
+    console.error(err.message);
+    console.log('errCode>>>', err.cause.code);
+    console.log('message>>>', err.message);
+    process.exit(err.cause.code);
+  });
