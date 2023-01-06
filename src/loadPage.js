@@ -1,5 +1,6 @@
 import 'axios-debug-log';
 import axios from 'axios';
+import Listr from 'listr';
 import prettier from 'prettier';
 import debug from 'debug';
 
@@ -31,16 +32,20 @@ const handleErrors = (err) => {
   throw getError(message);
 };
 
-const getSources = (resources) => {
+const getSources = (resources, dirpath, filesPath) => {
   const keys = Object.keys(resources);
   const requests = keys
-    .flatMap((key) => resources[key].urls.map((url) => {
+    .flatMap((key) => resources[key].urls.map((url, index) => {
       const options = key === 'images' ? { responseType: 'arraybuffer' } : {};
-      return axios.get(url, options);
+      const filepath = path.join(dirpath, filesPath, resources[key].newFilepaths[index]);
+      return {
+        title: url.href,
+        task: () => axios.get(url, options)
+          .then((response) => fs.writeFile(filepath, response.data)),
+      };
     }));
-  const newFilepaths = keys.flatMap((key) => resources[key].newFilepaths);
 
-  return { requests, newFilepaths };
+  return { requests };
 };
 
 export default (address, dirpath = process.cwd()) => {
@@ -58,38 +63,32 @@ export default (address, dirpath = process.cwd()) => {
   const htmlFilename = getFileName(mainPath, '.html');
   const filesPath = getFileName(mainPath, '_files');
   const htmlPath = path.join(dirpath, htmlFilename);
-  let newSourses;
   let promises;
 
   return axios.get(url)
+    .catch(handleErrors)
     .then((response) => {
       const { html, resources } = parseHtml(
         response.data,
         url,
         filesPath,
       );
-      const { requests, newFilepaths } = getSources(resources);
+      const { requests } = getSources(resources, dirpath, filesPath);
       const prettifiedHtml = prettier.format(html, {
         parser: 'html',
         printWidth: Infinity,
       });
-      const htmlPromise = fs.writeFile(htmlPath, prettifiedHtml);
-      promises = Promise.all([htmlPromise, ...requests]);
+      const htmlPromise = {
+        title: path.basename(htmlPath),
+        task: () => fs.writeFile(htmlPath, prettifiedHtml).catch(handleErrors),
+      };
+      promises = new Listr([htmlPromise, ...requests], { concurrent: true });
       if (requests.length > 0) {
         log(`has requests, requests length: ${requests.length}`);
-        newSourses = newFilepaths;
-        return fs.mkdir(path.join(dirpath, filesPath));
+        return fs.mkdir(path.join(dirpath, filesPath))
+          .catch(handleErrors);
       }
       return Promise.resolve();
     })
-    .then(() => promises)
-    .then((responses) => {
-      const [, ...restResponses] = responses;
-      restResponses.forEach((response, i) => {
-        const filepath = path.join(dirpath, filesPath, newSourses[i]);
-        fs.writeFile(filepath, response.data);
-      });
-      log('page loaded');
-    })
-    .catch(handleErrors);
+    .then(() => promises.run());
 };
