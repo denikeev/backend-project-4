@@ -38,3 +38,8 @@ make link
 [![step 5](https://asciinema.org/a/pIviNgLzBpT6IvhtbHAlUS7Gm.svg)](https://asciinema.org/a/pIviNgLzBpT6IvhtbHAlUS7Gm)   
 
 </details>
+<details><summary>step 6</summary>
+
+[![step 6](https://asciinema.org/a/zSGIHaJeWK5OO96IVt8cG8KTI.svg)](https://asciinema.org/a/zSGIHaJeWK5OO96IVt8cG8KTI?speed=2)   
+
+</details>
