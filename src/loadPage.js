@@ -36,12 +36,13 @@ const getResourcePromises = (resources, dirpath, filesPath) => {
   const keys = Object.keys(resources);
   const resourcePromises = keys
     .flatMap((key) => resources[key].urls.map((url, index) => {
-      const options = key === 'images' ? { responseType: 'arraybuffer' } : {};
       const filepath = path.join(dirpath, filesPath, resources[key].newFilepaths[index]);
       return {
         title: url.href,
-        task: () => axios.get(url, options)
-          .then((response) => fs.writeFile(filepath, response.data)),
+        task: () => axios.get(url, { responseType: 'arraybuffer' })
+          .then((response) => {
+            fs.writeFile(filepath, response.data);
+          }),
       };
     }));
 
@@ -55,7 +56,7 @@ export default (address, dirpath = process.cwd()) => {
   let promises;
   let htmlPath;
 
-  return axios.get(address)
+  return axios.get(address, { responseType: 'arraybuffer' })
     .catch(handleErrors)
     .then((response) => {
       const url = new URL(address);
