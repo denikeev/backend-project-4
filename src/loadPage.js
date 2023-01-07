@@ -32,59 +32,54 @@ const handleErrors = (err) => {
   throw getError(message);
 };
 
-const getSources = (resources, dirpath, filesPath) => {
+const getResourcePromises = (resources, dirpath, filesPath) => {
   const keys = Object.keys(resources);
-  const requests = keys
+  const resourcePromises = keys
     .flatMap((key) => resources[key].urls.map((url, index) => {
-      const options = key === 'images' ? { responseType: 'arraybuffer' } : {};
       const filepath = path.join(dirpath, filesPath, resources[key].newFilepaths[index]);
       return {
         title: url.href,
-        task: () => axios.get(url, options)
-          .then((response) => fs.writeFile(filepath, response.data)),
+        task: () => axios.get(url, { responseType: 'arraybuffer' })
+          .then((response) => {
+            fs.writeFile(filepath, response.data);
+          }),
       };
     }));
 
-  return { requests };
+  return resourcePromises;
 };
 
 export default (address, dirpath = process.cwd()) => {
   log(`URL ${address}`);
   log(`Output dir ${dirpath}`);
 
-  let url;
-  try {
-    url = new URL(address);
-  } catch (err) {
-    handleErrors(err);
-  }
-  const { hostname, pathname } = url;
-  const mainPath = path.join(hostname, pathname);
-  const htmlFilename = getFileName(mainPath, '.html');
-  const filesPath = getFileName(mainPath, '_files');
-  const htmlPath = path.join(dirpath, htmlFilename);
   let promises;
+  let htmlPath;
 
-  return axios.get(url)
+  return axios.get(address, { responseType: 'arraybuffer' })
     .catch(handleErrors)
     .then((response) => {
+      const url = new URL(address);
+      const { hostname, pathname } = url;
+      const mainPath = path.join(hostname, pathname);
+      const htmlFilename = getFileName(mainPath, '.html');
+      const filesPath = getFileName(mainPath, '_files');
+      htmlPath = path.join(dirpath, htmlFilename);
       const { html, resources } = parseHtml(
         response.data,
         url,
         filesPath,
       );
-      const { requests } = getSources(resources, dirpath, filesPath);
-      const prettifiedHtml = prettier.format(html, {
-        parser: 'html',
-        printWidth: Infinity,
-      });
+
+      const resourcePromises = getResourcePromises(resources, dirpath, filesPath);
+      const prettifiedHtml = prettier.format(html, { parser: 'html', printWidth: Infinity });
       const htmlPromise = {
         title: path.basename(htmlPath),
         task: () => fs.writeFile(htmlPath, prettifiedHtml).catch(handleErrors),
       };
-      promises = new Listr([htmlPromise, ...requests], { concurrent: true });
-      if (requests.length > 0) {
-        log(`has requests, requests length: ${requests.length}`);
+      promises = new Listr([htmlPromise, ...resourcePromises], { concurrent: true });
+      if (resourcePromises.length > 0) {
+        log(`has resourcePromises, resourcePromises length: ${resourcePromises.length}`);
         return fs.mkdir(path.join(dirpath, filesPath))
           .catch(handleErrors);
       }

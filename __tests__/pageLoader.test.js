@@ -66,27 +66,22 @@ describe('loadPage main flow', () => {
 });
 
 const errorCases = [
-  ['ERR_BAD_REQUEST', 'https://example.com/notfoundpage', getTempDir(), 404],
-  ['ERR_BAD_RESPONSE', 'https://example.com/internalservererr', getTempDir(), 500],
-  ['ERR_INVALID_URL', 'example.com', null, null],
-  ['ENOENT', 'https://example.com', '/unknown', 200],
-  ['EACCES', 'https://example.com', '/etc', 200],
+  ["Page 'undefined' not found [404]", 'https://example.com/notfoundpage', getTempDir(), 404],
+  ['Internal server error on page undefined [500]', 'https://example.com/internalservererr', getTempDir(), 500],
+  ['Invalid URL', 'example.com', null, null],
+  ["ENOENT: no such file or directory, open '/unknown/example.html'", 'https://example.com', '/unknown', 200],
+  ["EACCES: permission denied, open '/etc/example.html'", 'https://example.com', '/etc', 200],
 ];
 
 describe('loadPage throws', () => {
   test.each(errorCases)('%s', async (expected, address, dir, code) => {
     expect.assertions(1);
-    try {
-      const directory = dir instanceof Promise ? await dir : dir;
-      if (code !== null) {
-        const currentUrl = new URL(address);
-        nock(currentUrl.origin).get(currentUrl.pathname).reply(code);
-        await loadPage(address, directory);
-      } else {
-        await loadPage(address, directory);
-      }
-    } catch ({ cause }) {
-      expect(cause.code).toEqual(expected);
+    const directory = dir instanceof Promise ? await dir : dir;
+    if (code !== null) {
+      const currentUrl = new URL(address);
+      nock(currentUrl.origin).get(currentUrl.pathname).reply(code);
     }
+
+    await expect(loadPage(address, directory)).rejects.toThrow(expected);
   });
 });
