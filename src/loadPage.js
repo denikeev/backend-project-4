@@ -15,7 +15,7 @@ const log = debug('page-loader');
 const handleErrors = (err) => {
   const getError = (message = 'Unknown Error') => new Error(message, { cause: err });
   const errorCodes = ['ERR_INVALID_URL', 'ENOENT', 'EACCES'];
-  let message = '';
+  let message;
 
   if (err.response) {
     if (err.response.status === 404) {
@@ -57,7 +57,7 @@ export default (address, dirpath = process.cwd()) => {
   let htmlPath;
 
   return axios.get(address, { responseType: 'arraybuffer' })
-    .catch(handleErrors)
+    // eslint-disable-next-line consistent-return
     .then((response) => {
       const url = new URL(address);
       const { hostname, pathname } = url;
@@ -75,7 +75,7 @@ export default (address, dirpath = process.cwd()) => {
       const prettifiedHtml = prettier.format(html, { parser: 'html', printWidth: Infinity });
       const htmlPromise = {
         title: path.basename(htmlPath),
-        task: () => fs.writeFile(htmlPath, prettifiedHtml).catch(handleErrors),
+        task: () => fs.writeFile(htmlPath, prettifiedHtml),
       };
       promises = new Listr([htmlPromise, ...resourcePromises], { concurrent: true });
       if (resourcePromises.length > 0) {
@@ -83,10 +83,10 @@ export default (address, dirpath = process.cwd()) => {
         return fs.mkdir(path.join(dirpath, filesPath))
           .catch(handleErrors);
       }
-      return Promise.resolve();
     })
     .then(() => promises.run())
     .then(() => {
       console.log(`Page was successfully downloaded into '${htmlPath}'`);
-    });
+    })
+    .catch(handleErrors);
 };

@@ -6,8 +6,18 @@
 
 # Page loader
 
-## Setup
+## Description
+Page Loader is a command line utility that downloads pages from the Internet and stores them on your computer. Download page and open it without internet.
 
+## Features
+* downloads pictures, styles and scripts
+* downloads resources in parallel
+* shows progress for each resource in terminal
+
+## Dependencies:
+* Node JS
+
+## Setup
 ```sh
 make install
 make link
